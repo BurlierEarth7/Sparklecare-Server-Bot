@@ -6,7 +6,13 @@ const path = require("path");
 const fs = require("fs");
 
 // Setup client
-const client = new Discord.Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Discord.Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+});
 
 // Command Handler
 client.commands = new Collection();

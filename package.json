@@ -1,0 +1,22 @@
+{
+  "name": "sparklecare-server-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for sparklecare server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "cmds": "node deploy_commands.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@discordjs/rest": "^2.2.0",
+    "discord-api-types": "^0.37.73",
+    "discord.js": "^12.5.3"
+  },
+  "keywords": [],
+  "author": "BurlierEarth7",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

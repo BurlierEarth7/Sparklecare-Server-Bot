@@ -31,7 +31,7 @@ for (const folder of commandFolders) {
 
 console.log(commands);
 const rest = new REST({ version: "9" }).setToken(token);
-/*
+
 (async () => {
   try {
     // Register slash commands for a specific guild
@@ -44,5 +44,3 @@ const rest = new REST({ version: "9" }).setToken(token);
     console.error(error);
   }
 })();
-
-*/

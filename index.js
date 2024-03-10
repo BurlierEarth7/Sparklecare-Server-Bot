@@ -1,100 +1,53 @@
 const Discord = require("discord.js");
+const { Collection, Events, GatewayIntentBits } = require("discord.js");
 const config = require("./configuration.json");
 const REST = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
+const path = require("path");
 
 const fs = require("fs");
 
-const myIntents = new Discord.Intents([
-  Discord.Intents.FLAGS.GUILDS,
-  Discord.Intents.FLAGS.GUILD_MESSAGES,
-  Discord.Intents.FLAGS.GUILD_MEMBERS,
-  Discord.Intents.FLAGS.DIRECT_MESSAGES,
-]);
-const client = new Discord.Client({ intents: myIntents });
-client.commands = new Discord.Collection();
+const client = new Discord.Client({ intents: [GatewayIntentBits.Guilds] });
 
-// Take commands
-const commandFiles = fs
-  .readdirSync("./commands")
-  .filter((file) => file.endsWith(".js"));
-for (const file of commandFiles) {
-  const command = require(`./commands/` + file);
-  client.commands.set(command.name, command);
-}
+// Command Handler
+client.commands = new Collection();
+const foldersPath = path.join(__dirname, "commands");
+const commandFolders = fs.readdirSync(foldersPath);
 
-// Cooldowns
-const cooldowns = new Discord.Collection();
-
-// On Ready
-client.once("ready", () => {
-  console.log("Ready!");
-});
-
-// On Message
-client.on("message", (message) => {
-  if (!message.content.startsWith(config.prefix) || message.author.bot) return;
-
-  const args = message.content.slice(config.prefix.length).split(/ +/);
-  const commandName = args.shift().toLowerCase();
-
-  const command =
-    client.commands.get(commandName) ||
-    client.commands.find(
-      (cmd) => cmd.aliases && cmd.aliases.includes(commandName)
-    );
-
-  // If command exist
-  if (!command) return;
-
-  // Check if command can be executed in DM
-  if (command.guildOnly && message.channel.type !== "text") {
-    return message.reply("I can't execute that command inside DMs!");
-  }
-
-  // Check if args are required
-  if (command.args && !args.length) {
-    let reply = `You didn't provide any arguments, ${message.author}!`;
-
-    if (command.usage) {
-      reply += `\nThe proper usage would be: \`${config.prefix}${command.name} ${command.usage}\``;
-    }
-
-    return message.channel.send(reply);
-  }
-
-  // Check if user is in cooldown
-  if (!cooldowns.has(command.name)) {
-    cooldowns.set(command.name, new Discord.Collection());
-  }
-
-  const now = Date.now();
-  const timestamps = cooldowns.get(command.name);
-  const cooldownAmount = (command.cooldown || 3) * 1000;
-
-  if (timestamps.has(message.author.id)) {
-    const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
-
-    if (now < expirationTime) {
-      // If user is in cooldown
-      const timeLeft = (expirationTime - now) / 1000;
-      return message.reply(
-        `please wait ${timeLeft.toFixed(
-          1
-        )} more second(s) before reusing the \`${command.name}\` command.`
+for (const folder of commandFolders) {
+  // grab all command files from commands dir
+  const commandPath = path.join(foldersPath, folder);
+  const commandFiles = fs
+    .readdirSync(commandPath)
+    .filter((file) => file.endsWith(".js"));
+  // grab slashcommandbuilder#toJSON() output of each command's data
+  for (const file of commandFiles) {
+    const filePath = path.join(commandPath, file);
+    const command = require(filePath);
+    if ("data" in command && "execute" in command) {
+      client.commands.set(command.data.name, command);
+    } else {
+      console.log(
+        `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
       );
     }
-  } else {
-    timestamps.set(message.author.id, now);
-    setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-    // Execute command
-    try {
-      command.execute(message, args);
-    } catch (error) {
-      console.error(error);
-      message.reply("there was an error trying to execute that command!");
-    }
   }
-});
+}
+
+//Events handler
+const eventsPath = path.join(__dirname, "events");
+const eventFiles = fs
+  .readdirSync(eventsPath)
+  .filter((file) => file.endsWith(".js"));
+
+for (const file of eventFiles) {
+  const filePath = path.join(eventsPath, file);
+  const event = require(filePath);
+  if (event.once) {
+    client.once(event.name, (...args) => event.execute(...args));
+  } else {
+    client.on(event.name, (...args) => event.execute(...args));
+  }
+}
 
 client.login(config.token);

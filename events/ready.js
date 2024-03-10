@@ -1,3 +1,4 @@
+// Imports
 const { Events } = require("discord.js");
 
 module.exports = {
@@ -5,5 +6,5 @@ module.exports = {
   once: true,
   execute(client) {
     console.log(`Ready! Logged in as ${client.user.tag}`);
-  },
-};
+  }, // End of execute
+}; // End of exports

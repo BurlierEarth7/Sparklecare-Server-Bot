@@ -2,8 +2,6 @@
 const Discord = require("discord.js");
 const { Collection, Events, GatewayIntentBits } = require("discord.js");
 const config = require("./configuration.json");
-const REST = require("@discordjs/rest");
-const { Routes } = require("discord-api-types/v9");
 const path = require("path");
 const fs = require("fs");
 

@@ -1,6 +1,6 @@
 // Imports
 const Discord = require("discord.js");
-const { Collection, Events, GatewayIntentBits } = require("discord.js");
+const { Collection, GatewayIntentBits } = require("discord.js");
 const config = require("./configuration.json");
 const path = require("path");
 const fs = require("fs");

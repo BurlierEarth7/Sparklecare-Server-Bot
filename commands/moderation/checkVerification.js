@@ -1,10 +1,5 @@
-//TODO: get age part to work
-//* Why. WHY DOES THIS NOT WORK AAAA
-
 const { SlashCommandBuilder } = require("discord.js");
 
-var reply = "User's verification status: \n";
-var canVerify = true;
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("check")
@@ -18,69 +13,51 @@ module.exports = {
 
   // End of command builder
   async execute(interaction) {
-    //check if user is older than 16
+    var reply = "User's verification status: \n";
+    var canVerify = true;
     const user = interaction.options.getUser("user");
-    client.channels.cache
-      .get(interaction.channel.id)
-      .messages.fetch({ limit: 100 })
-      .then((messages) => {
+    // Check if account is older than 1 week
+    if (Date.now() - user.createdAt < 604800000) {
+      canVerify = false;
+      reply += "# WARNING\nAccount ***IS*** under 1 week old!.";
+    }
 
-        for (const message of messages.values()) {
-          if (message.author.id == user) {
-            if (!isNaN(parseInt(message.content.replace(/([^0-9])/g, "")))) {
-              var age = message.content.replace(/([^0-9])/g, "");
-              if (parseInt(age) < 16) {
-                //user less than 16
-                setVerify(false);
-                addReply(
-                  "## Caution \nThis user is likely **NOT** 16 years old or older.\n"
-                );
-              }
-            }
-          }
-        }
-        if (Date.now() - user.createdTimestamp < 1000 * 60 * 60 * 24 * 7) {
-          setVerify(false);
-          addReply(
-            "# Warning \nThis user's account **IS** less than 1 week old.\n"
-          );
-        }
-        canVerify == true
-          ? addReply("This user is eligible for verification.")
-          : addReply("**This user is likely not eligible for verification.**");
-      });
-      say(interaction, reply);
-  },
-}; // End of module.exports
-
-function setVerify(b) {
-  canVerify = b;
-}
-function addReply(m) {
-   reply += m;
-}
-
-async function say(interaction, msg) {
-  await interaction.reply({ content: msg, ephemeral: true });
-}
-
-
-/*
-function olderThan16(interaction, user, canVerify, reply) {
-  client.channels.cache
-    .get(interaction.channel.id)
-    .messages.fetch({ limit: 100 })
-    .then(function (messages) {
-      // find first message with a number
-      for (const message of messages.values()) {
-        if (message.author == user) {
-          if (parseInt(message.content.replace(/[^0-9]/g, "")) < 16) {
+    // Get user's messages in this channel, check for a number
+    const messages = await interaction.channel.messages.fetch({ limit: 100 }); // Get last 100 messages
+    var age = -1;
+    await messages.every(function (message) {
+      if (message.author.id == user.id) {
+        if (message.content.match(/[0-9]/g)) {
+          age = parseInt(message.content.replace(/[^0-9]/g, ""));
+          if (age < 16) {
             canVerify = false;
-            reply +=
-              "## Caution \nThis user **MAY** be less than 16 years old, due to one of their messages including a number less than 16, or no numbers being found.\n";
+            reply += "## Caution\nUser is **POSSIBLY** under 16 years old.\n";
+          } else if (age > 60) {
+            reply += "### Notice:\nAge gathered may be incorrect, as it is past the age of 60.\n(They might also just be old though)\n";
           }
+
+
+          return false; // Stop going through messages
         }
       }
+      return true; // Keep going through messages
+    }); // End of messages.every
+
+    if (age == -1) {
+      reply +=
+        "## Caution\nCould not find a message from the user containing their age.\n *Are you running the command in the ticket?*\n";
+      canVerify = false;
+    }
+
+    if (canVerify) {
+      reply += "User is **LIKELY** eligible for verification.";
+    } else {
+      reply += "User is **LIKELY NOT** eligible for verification.";
+    }
+
+    await interaction.reply({
+      content: reply,
+      ephemeral: true,
     });
-}
-*/
+  }, // End of execute
+}; // End of module.exports

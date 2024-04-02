@@ -1,3 +1,4 @@
+//TODO: MAKE COMMAND ADMIN ONLY
 const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {

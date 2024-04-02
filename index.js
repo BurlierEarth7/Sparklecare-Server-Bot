@@ -6,7 +6,7 @@ const path = require("path");
 const fs = require("fs");
 
 // Setup client
-const client = new Discord.Client({
+global.client = new Discord.Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,

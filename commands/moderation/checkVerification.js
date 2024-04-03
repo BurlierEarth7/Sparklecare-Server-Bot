@@ -1,5 +1,4 @@
-//TODO: MAKE COMMAND ADMIN ONLY
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,7 +9,9 @@ module.exports = {
         .setName("user")
         .setDescription("The user to check")
         .setRequired(true)
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+    .setDMPermission(false),
 
   // End of command builder
   async execute(interaction) {
@@ -20,7 +21,7 @@ module.exports = {
     // Check if account is older than 1 week
     if (Date.now() - user.createdAt < 604800000) {
       canVerify = false;
-      reply += "# WARNING\nAccount ***IS*** under 1 week old!.";
+      reply += "# WARNING\nAccount ***IS*** under 1 week old!.\n";
     }
 
     // Get user's messages in this channel, check for a number
